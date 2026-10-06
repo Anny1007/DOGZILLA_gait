@@ -1,0 +1,6 @@
+# 執行時輸出 (保留資料夾本身)
+logs/*
+!logs/.gitkeep
+__pycache__/
+*.pyc
+.DS_Store

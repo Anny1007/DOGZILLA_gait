@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!-- DOGZILLA S1 官方模型 + 可調的光達負載。
+  官方模型 (../DOGZILLA/sim_env/description/dogzilla_s1_official.urdf.xacro) 的 laser_link 只有 14 g,
+  實際加裝的光達通常重幾十到兩百公克, 裝在背上會讓重心變高、偏移, 這是實機走路變晃的可能原因。
+  這裡在 base_link 上固定一個方塊代表光達與支架, 質量與位置由 xacro 參數決定。lidar_mass 為 0 時就是原本的官方模型。
+  參數 (座標相對 base_link, 單位 m / kg)
+    lidar_mass  負載質量, 預設 0
+    lidar_x     前後位置, 預設 -0.017 (與官方 laser_link 相同)
+    lidar_z     負載中心高度, 預設 0.09
+    lidar_size  方塊邊長, 預設 0.07
+  注意：註解內不要用「半形冒號+空格」, robot_description 會被 launch 當 YAML 解析而失敗。 -->
+<robot name="champ" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:arg name="lidar_mass" default="0.0" />
+  <xacro:arg name="lidar_x" default="-0.017" />
+  <xacro:arg name="lidar_z" default="0.09" />
+  <xacro:arg name="lidar_size" default="0.07" />
+  <xacro:property name="m" value="$(arg lidar_mass)" />
+  <xacro:property name="s" value="$(arg lidar_size)" />
+
+  <xacro:include filename="/description_base/dogzilla_s1_official.urdf.xacro" />
+
+  <xacro:if value="${m > 0}">
+    <link name="lidar_payload">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <mass value="${m}" />
+        <inertia ixx="${m * s * s / 6}" ixy="0" ixz="0" iyy="${m * s * s / 6}" iyz="0" izz="${m * s * s / 6}" />
+      </inertial>
+      <visual>
+        <geometry><box size="${s} ${s} ${s * 0.6}" /></geometry>
+        <material name="payload"><color rgba="0.2 0.2 0.2 1" /></material>
+      </visual>
+    </link>
+    <joint name="lidar_payload_joint" type="fixed">
+      <origin xyz="$(arg lidar_x) 0 $(arg lidar_z)" rpy="0 0 0" />
+      <parent link="base_link" />
+      <child link="lidar_payload" />
+    </joint>
+  </xacro:if>
+</robot>
